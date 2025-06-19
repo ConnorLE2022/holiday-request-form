@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Holiday / Lieu Request Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    textarea {
+      resize: vertical;
+    }
+    button, .remove-btn {
+      margin-top: 20px;
+      padding: 10px 15px;
+      background: #007bff;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover, .remove-btn:hover {
+      background: #0056b3;
+    }
+    .remove-btn {
+      margin-top: 10px;
+      background: #dc3545;
+      font-size: 14px;
+      padding: 5px 10px;
+    }
+    .remove-btn:hover {
+      background: #a71d2a;
+    }
+    .line-group {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      position: relative;
+      border-radius: 4px;
+    }
+    /* Logos container */
+    .logos-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .logos-container img {
+      height: 50px;
+      object-fit: contain;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Holiday / Lieu Request Form</h2>
+
+  <form id="requestForm">
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" placeholder="Your full name" required>
+
+    <label for="requestType">Type of request</label>
+    <select id="requestType" name="requestType" required>
+      <option value="" disabled selected>Select one</option>
+      <option value="Holiday">Holiday</option>
+      <option value="Lieu">Lieu</option>
+    </select>
+
+    <div id="holidayDatesDiv" style="display:none;">
+      <h4>Holiday Dates</h4>
+      <div id="holidayDatesContainer"></div>
+      <button type="button" id="addHolidayDateBtn">Add another date</button>
+    </div>
+
+    <div id="lieuHoursDiv" style="display:none;">
+      <h4>Lieu Hours</h4>
+      <div id="lieuHoursContainer"></div>
+      <button type="button" id="addLieuHourBtn">Add another entry</button>
+    </div>
+
+    <label for="comments">Reason / Comments</label>
+    <textarea id="comments" name="comments" rows="4" placeholder="Add any details here..."></textarea>
+
+    <div class="logos-container">
+      <a href="https://www.wexel.co.uk" target="_blank" rel="noopener noreferrer">
+        <img src="https://www.wexel.co.uk/wp-content/uploads/2019/08/wexel-logo.png" alt="Wexel Logo">
+      </a>
+      <a href="https://www.linkedin.com/company/wexel/" target="_blank" rel="noopener noreferrer">
+        <img src="https://media.licdn.com/dms/image/v2/C510BAQH0IlyG19httA/company-logo_200_200/company-logo_200_200/0/1631397867041?e=2147483647&v=beta&t=PehjEpxdvpx9rQrOZNRezLAC4ZiK8F6uXeCELvs074Y" alt="LinkedIn Company Logo">
+      </a>
+    </div>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    emailjs.init('5R_BcYw_973l2Ztqg');
+
+    const requestType = document.getElementById('requestType');
+    const holidayDatesDiv = document.getElementById('holidayDatesDiv');
+    const lieuHoursDiv = document.getElementById('lieuHoursDiv');
+    const holidayDatesContainer = document.getElementById('holidayDatesContainer');
+    const lieuHoursContainer = document.getElementById('lieuHoursContainer');
+    const addHolidayDateBtn = document.getElementById('addHolidayDateBtn');
+    const addLieuHourBtn = document.getElementById('addLieuHourBtn');
+    const form = document.getElementById('requestForm');
+
+    function setHolidayFieldsRequired(required) {
+      const holidayDates = document.querySelectorAll('input[name="holidayDates[]"]');
+      const holidayTypes = document.querySelectorAll('select[name="holidayType[]"]');
+      holidayDates.forEach(input => input.required = required);
+      holidayTypes.forEach(select => select.required = required);
+    }
+
+    function setLieuFieldsRequired(required) {
+      const lieuDates = document.querySelectorAll('input[name="lieuDates[]"]');
+      const lieuHours = document.querySelectorAll('input[name="lieuHours[]"]');
+      lieuDates.forEach(input => input.required = required);
+      lieuHours.forEach(input => input.required = required);
+    }
+
+    function createHolidayDateLine() {
+      const div = document.createElement('div');
+      div.classList.add('line-group');
+
+      div.innerHTML = `
+        <label>Date</label>
+        <input type="date" name="holidayDates[]" required>
+
+        <label>Type</label>
+        <select name="holidayType[]" required>
+          <option value="Full Day" selected>Full Day</option>
+          <option value="Morning">Morning</option>
+          <option value="Afternoon">Afternoon</option>
+        </select>
+
+        <button type="button" class="remove-btn">Remove</button>
+      `;
+
+      const removeBtn = div.querySelector('.remove-btn');
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+        setHolidayFieldsRequired(holidayDatesContainer.children.length > 0);
+      });
+
+      return div;
+    }
+
+    function createLieuHourLine() {
+      const div = document.createElement('div');
+      div.classList.add('line-group');
+
+      div.innerHTML = `
+        <label>Date</label>
+        <input type="date" name="lieuDates[]" required>
+
+        <label>Hours</label>
+        <input type="number" name="lieuHours[]" min="0.5" max="8" step="0.5" required>
+
+        <button type="button" class="remove-btn">Remove</button>
+      `;
+
+      const removeBtn = div.querySelector('.remove-btn');
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+        setLieuFieldsRequired(lieuHoursContainer.children.length > 0);
+      });
+
+      return div;
+    }
+
+    function resetInputs() {
+      holidayDatesContainer.innerHTML = '';
+      lieuHoursContainer.innerHTML = '';
+      setHolidayFieldsRequired(false);
+      setLieuFieldsRequired(false);
+    }
+
+    requestType.addEventListener('change', () => {
+      resetInputs();
+
+      if (requestType.value === 'Holiday') {
+        holidayDatesDiv.style.display = 'block';
+        lieuHoursDiv.style.display = 'none';
+
+        const firstHoliday = createHolidayDateLine();
+        holidayDatesContainer.appendChild(firstHoliday);
+        setHolidayFieldsRequired(true);
+        setLieuFieldsRequired(false);
+
+      } else if (requestType.value === 'Lieu') {
+        holidayDatesDiv.style.display = 'none';
+        lieuHoursDiv.style.display = 'block';
+
+        const firstLieu = createLieuHourLine();
+        lieuHoursContainer.appendChild(firstLieu);
+        setHolidayFieldsRequired(false);
+        setLieuFieldsRequired(true);
+
+      } else {
+        holidayDatesDiv.style.display = 'none';
+        lieuHoursDiv.style.display = 'none';
+        setHolidayFieldsRequired(false);
+        setLieuFieldsRequired(false);
+      }
+    });
+
+    addHolidayDateBtn.addEventListener('click', () => {
+      const newLine = createHolidayDateLine();
+      holidayDatesContainer.appendChild(newLine);
+      setHolidayFieldsRequired(true);
+    });
+
+    addLieuHourBtn.addEventListener('click', () => {
+      const newLine = createLieuHourLine();
+      lieuHoursContainer.appendChild(newLine);
+      setLieuFieldsRequired(true);
+    });
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const user_name = form.name.value.trim();
+      const request_type = form.requestType.value;
+
+      let start_date = '';
+      let lieu_time = '';
+
+      if (request_type === 'Holiday') {
+        const dates = [];
+        const dateInputs = holidayDatesContainer.querySelectorAll('input[name="holidayDates[]"]');
+        const typeSelects = holidayDatesContainer.querySelectorAll('select[name="holidayType[]"]');
+        for (let i = 0; i < dateInputs.length; i++) {
+          const dateVal = dateInputs[i].value;
+          const typeVal = typeSelects[i].value;
+          if (dateVal) {
+            dates.push(`${dateVal} (${typeVal})`);
+          }
+        }
+        start_date = dates.join(', ');
+      } else if (request_type === 'Lieu') {
+        const entries = [];
+        const lieuDateInputs = lieuHoursContainer.querySelectorAll('input[name="lieuDates[]"]');
+        const lieuHoursInputs = lieuHoursContainer.querySelectorAll('input[name="lieuHours[]"]');
+        for (let i = 0; i < lieuDateInputs.length; i++) {
+          const dateVal = lieuDateInputs[i].value;
+          const hoursVal = lieuHoursInputs[i].value;
+          if (dateVal && hoursVal) {
+            entries.push(`${dateVal}: ${hoursVal} hours`);
+          }
+        }
+        lieu_time = entries.join(', ');
+      }
+
+      const message = form.comments.value.trim();
+
+      const templateParams = {
+        user_name,
+        request_type,
+        start_date,
+        lieu_time,
+        message
+      };
+
+      emailjs.send('service_fr5zh1n', 'template_r4lf7ql', templateParams)
+        .then(() => {
+          alert('Request sent successfully!');
+          form.reset();
+          resetInputs();
+          holidayDatesDiv.style.display = 'none';
+          lieuHoursDiv.style.display = 'none';
+        }, (error) => {
+          alert('Failed to send request. Please try again later.');
+          console.error('EmailJS error:', error);
+        });
+    });
+  </script>
+
+</body>
+</html>
